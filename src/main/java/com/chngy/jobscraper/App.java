@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 
-import static com.chngy.jobscraper.Constants.*;
+import static com.chngy.jobscraper.Common.Constants.*;
 
 /**
  * Lambda function entry point. You can change to use other pojo type or implement
