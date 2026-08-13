@@ -5,6 +5,10 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import java.util.Map;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+
+import static com.chngy.jobscraper.Constants.*;
 
 /**
  * Lambda function entry point. You can change to use other pojo type or implement
@@ -14,11 +18,13 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
  */
 public class App implements RequestHandler<Map<String, String>, String> {
     private final S3AsyncClient s3Client;
+    private final SnsClient snsClient;
 
     public App() {
         // Initialize the SDK client outside of the handler method so that it can be reused for subsequent invocations.
         // It is initialized when the class is loaded.
         s3Client = DependencyFactory.s3Client();
+        snsClient = SnsClient.builder().build();
         // Consider invoking a simple api here to pre-warm up the application, eg: dynamodb#listTables
     }
 
@@ -27,6 +33,14 @@ public class App implements RequestHandler<Map<String, String>, String> {
         LambdaLogger lambdaLogger = context.getLogger();
         lambdaLogger.log("Start to handle request");
         // TODO: invoking the api call using s3Client.
+
+        PublishRequest publishRequest = PublishRequest.builder()
+                .topicArn(TOPIC_NAME)
+                .subject(SUBJECT)
+                .message(MESSAGE)
+                .build();
+
+        snsClient.publish(publishRequest);
         return "";
     }
 }
