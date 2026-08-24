@@ -3,7 +3,12 @@ package com.chngy.jobscraper;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+
+import java.util.List;
 import java.util.Map;
+
+import com.chngy.jobscraper.Scraper.Scraper;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
@@ -19,6 +24,7 @@ import static com.chngy.jobscraper.Common.Constants.*;
 public class App implements RequestHandler<Map<String, String>, String> {
     private final S3AsyncClient s3Client;
     private final SnsClient snsClient;
+    private final List<Scraper> scrapers;
 
     public App() {
         // Initialize the SDK client outside of the handler method so that it can be reused for subsequent invocations.
@@ -26,6 +32,9 @@ public class App implements RequestHandler<Map<String, String>, String> {
         s3Client = DependencyFactory.s3Client();
         snsClient = SnsClient.builder().build();
         // Consider invoking a simple api here to pre-warm up the application, eg: dynamodb#listTables
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(Config.class)) {
+            scrapers = List.copyOf(ctx.getBeansOfType(Scraper.class).values());
+        }
     }
 
     @Override
@@ -34,6 +43,10 @@ public class App implements RequestHandler<Map<String, String>, String> {
         lambdaLogger.log("Start to handle request");
         // TODO: invoking the api call using s3Client.
 
+//        Calls scraper to read website
+
+
+//      This sends it to the SNS topic
         PublishRequest publishRequest = PublishRequest.builder()
                 .topicArn(TOPIC_NAME)
                 .subject(SUBJECT)
