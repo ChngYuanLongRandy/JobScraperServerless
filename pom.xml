@@ -18,6 +18,8 @@
         <aws.crt.version>0.48.4</aws.crt.version>
         <spring.version>7.0.8</spring.version>
         <lombok.version>1.18.46</lombok.version>
+        <logging.version>2.24.3</logging.version>
+        <slf4j.version>2.0.18</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -74,6 +76,7 @@
             <version>${aws.lambda.java.version}</version>
         </dependency>
 
+        <!-- Spring context -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -92,6 +95,27 @@
             <artifactId>junit-jupiter</artifactId>
             <version>${junit5.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!--    Logging    -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>${logging.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${logging.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-log4j2</artifactId>
+            <version>${aws.lambda.java.version}</version>
         </dependency>
     </dependencies>
 

@@ -3,6 +3,7 @@ package com.chngy.jobscraper.Scraper.Implemented;
 import com.chngy.jobscraper.Common.ListingDTO;
 import com.chngy.jobscraper.Scraper.Scraper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GovScraper implements Scraper {
@@ -25,5 +27,8 @@ public class GovScraper implements Scraper {
     public List<ListingDTO> Search() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        log.info("Printing out the response : {}", response);
+        ListingDTO listingDTO = ListingDTO.builder().title("SoftwareDev").build();
+        return List.of(listingDTO);
     }
 }
