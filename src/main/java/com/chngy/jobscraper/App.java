@@ -44,8 +44,7 @@ public class App implements RequestHandler<Map<String, String>, String> {
 
     @Override
     public String handleRequest(final Map<String, String> input, final Context context) {
-        LambdaLogger lambdaLogger = context.getLogger();
-        lambdaLogger.log("Start to handle request");
+        log.info("Start to handle request");
         log.info("Test logging with SLF4j");
         // TODO: invoking the api call using s3Client.
 
@@ -55,7 +54,7 @@ public class App implements RequestHandler<Map<String, String>, String> {
             try {
                 listings.addAll(scraper.Search());
             } catch (IOException | InterruptedException e) {
-                lambdaLogger.log("Scraper failed: " + scraper.getClass().getSimpleName() + " - " + e.getMessage());
+                log.info("Scraper failed: " + scraper.getClass().getSimpleName() + " - " + e.getMessage());
             }
         }
 
