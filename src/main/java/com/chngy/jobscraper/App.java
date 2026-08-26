@@ -4,10 +4,14 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.chngy.jobscraper.Common.ListingDTO;
 import com.chngy.jobscraper.Scraper.Scraper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -21,6 +25,7 @@ import static com.chngy.jobscraper.Common.Constants.*;
  *
  * @see <a href=https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html>Lambda Java Handler</a> for more information
  */
+@Slf4j
 public class App implements RequestHandler<Map<String, String>, String> {
     private final S3AsyncClient s3Client;
     private final SnsClient snsClient;
@@ -41,10 +46,20 @@ public class App implements RequestHandler<Map<String, String>, String> {
     public String handleRequest(final Map<String, String> input, final Context context) {
         LambdaLogger lambdaLogger = context.getLogger();
         lambdaLogger.log("Start to handle request");
+        log.info("Test logging with SLF4j");
         // TODO: invoking the api call using s3Client.
 
 //        Calls scraper to read website
+        List<ListingDTO> listings = new ArrayList<>();
+        for (Scraper scraper : scrapers) {
+            try {
+                listings.addAll(scraper.Search());
+            } catch (IOException | InterruptedException e) {
+                lambdaLogger.log("Scraper failed: " + scraper.getClass().getSimpleName() + " - " + e.getMessage());
+            }
+        }
 
+        log.info("End of scraping");
 
 //      This sends it to the SNS topic
         PublishRequest publishRequest = PublishRequest.builder()

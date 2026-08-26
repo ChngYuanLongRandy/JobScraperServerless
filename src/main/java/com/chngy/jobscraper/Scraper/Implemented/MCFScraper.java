@@ -17,15 +17,15 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GovScraper implements Scraper {
+public class MCFScraper implements Scraper {
 
-    @Value("${CAREER_GOV_URL:https://jobs.careers.gov.sg/}")
+    @Value("${MY_CAREER_FUTURES_URL:https://www.mycareersfuture.gov.sg/}")
     private String url;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public List<ListingDTO> Search() throws IOException, InterruptedException {
-        log.info("Entering Career Gov Scrapper");
+        log.info("Entering MCF Scrapper");
         HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("Printing out the response : {}", response);
