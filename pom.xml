@@ -20,6 +20,7 @@
         <lombok.version>1.18.46</lombok.version>
         <logging.version>2.24.3</logging.version>
         <slf4j.version>2.0.18</slf4j.version>
+        <commons-lang3.version>3.19.0</commons-lang3.version>
     </properties>
 
     <dependencyManagement>
@@ -83,6 +84,12 @@
             <version>${spring.version}</version>
         </dependency>
 
+        <!--   Strings Utils    -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
