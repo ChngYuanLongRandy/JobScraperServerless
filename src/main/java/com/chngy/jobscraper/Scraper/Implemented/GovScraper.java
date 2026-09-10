@@ -43,13 +43,15 @@ public class GovScraper implements Scraper {
     private final String FIRST_ORDER_PREFIX = "?";
     private final String SUBSEQUENT_PREFIX = "&";
 
-    private final HttpClient httpClient;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public List<ListingDTO> Search() throws IOException, InterruptedException {
         log.info("Entering Career Gov Scrapper");
         HttpRequest request = HttpRequest.newBuilder(URI.create(buildURL())).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("Printing out the response : {}", response);
+        log.info("Printing out the response request : {}", response.request());
+        log.info("Printing out the response body: {}", response.body());
         ListingDTO listingDTO = ListingDTO.builder().title("SoftwareDev").build();
         return List.of(listingDTO);
     }

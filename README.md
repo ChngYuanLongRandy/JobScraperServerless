@@ -3,6 +3,9 @@
 This project contains an AWS Lambda maven application with [AWS Java SDK 2.x](https://github.com/aws/aws-sdk-java-v2) dependencies.
 The purpose of this app is to be run in a lambda function with accompanying S3 buckets 
 
+## Why
+- Run job search scans regardless of AI tool
+
 ## Prerequisites
 - Java 25
 - Apache Maven

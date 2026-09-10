@@ -1,7 +1,6 @@
 package com.chngy.jobscraper;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
 import java.io.IOException;
@@ -10,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.chngy.jobscraper.Common.ListingDTO;
+import com.chngy.jobscraper.Config.Config;
 import com.chngy.jobscraper.Scraper.Scraper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -27,15 +28,20 @@ import static com.chngy.jobscraper.Common.Constants.*;
  */
 @Slf4j
 public class App implements RequestHandler<Map<String, String>, String> {
-    private final S3AsyncClient s3Client;
-    private final SnsClient snsClient;
+    private S3AsyncClient s3Client;
+    private SnsClient snsClient;
     private final List<Scraper> scrapers;
+    final String PROFILE = System.getenv("PROFILE");
+    boolean isDev = Strings.isNotEmpty(PROFILE) && PROFILE.equalsIgnoreCase("dev");
 
     public App() {
         // Initialize the SDK client outside of the handler method so that it can be reused for subsequent invocations.
         // It is initialized when the class is loaded.
-        s3Client = DependencyFactory.s3Client();
-        snsClient = SnsClient.builder().build();
+        log.info("Profile is: {}", PROFILE);
+        if (!isDev){
+            s3Client = DependencyFactory.s3Client();
+            snsClient = SnsClient.builder().build();
+        }
         // Consider invoking a simple api here to pre-warm up the application, eg: dynamodb#listTables
         try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(Config.class)) {
             scrapers = List.copyOf(ctx.getBeansOfType(Scraper.class).values());
@@ -54,20 +60,22 @@ public class App implements RequestHandler<Map<String, String>, String> {
             try {
                 listings.addAll(scraper.Search());
             } catch (IOException | InterruptedException e) {
-                log.info("Scraper failed: " + scraper.getClass().getSimpleName() + " - " + e.getMessage());
+                log.info("Scraper failed: {} - {}", scraper.getClass().getSimpleName(), e.getMessage());
             }
         }
 
         log.info("End of scraping");
 
+        if(!isDev) {
 //      This sends it to the SNS topic
-        PublishRequest publishRequest = PublishRequest.builder()
-                .topicArn(TOPIC_NAME)
-                .subject(SUBJECT)
-                .message(MESSAGE)
-                .build();
+            PublishRequest publishRequest = PublishRequest.builder()
+                    .topicArn(TOPIC_NAME)
+                    .subject(SUBJECT)
+                    .message(MESSAGE)
+                    .build();
 
-        snsClient.publish(publishRequest);
+            snsClient.publish(publishRequest);
+        }
         return "";
     }
 }
