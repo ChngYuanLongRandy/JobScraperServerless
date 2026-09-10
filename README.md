@@ -13,7 +13,9 @@ The purpose of this app is to be run in a lambda function with accompanying S3 b
 
 ## How to Use
 - Setup scheduler to run this function
-- 
+
+## Local Env Var
+PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 
 ## Proposed Flow
 1. Read from website using FetchResponse
