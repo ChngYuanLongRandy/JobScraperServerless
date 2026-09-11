@@ -1,4 +1,4 @@
-package com.chngy.jobscraper.Common;
+package com.chngy.jobscraper.Enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
