@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.chngy.jobscraper.Common.ListingDTO;
+import com.chngy.jobscraper.DTO.ListingDTO;
 import com.chngy.jobscraper.Config.Config;
 import com.chngy.jobscraper.Scraper.Scraper;
 import lombok.extern.slf4j.Slf4j;

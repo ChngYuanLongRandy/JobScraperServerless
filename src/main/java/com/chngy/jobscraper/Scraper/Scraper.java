@@ -1,6 +1,6 @@
 package com.chngy.jobscraper.Scraper;
 
-import com.chngy.jobscraper.Common.ListingDTO;
+import com.chngy.jobscraper.DTO.ListingDTO;
 
 import java.io.IOException;
 import java.util.List;

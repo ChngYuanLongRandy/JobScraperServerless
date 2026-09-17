@@ -16,7 +16,7 @@ Resources:
           CAREER_GOV_URL: https://jobs.careers.gov.sg/
           MY_CAREER_FUTURES_URL: https://www.mycareersfuture.gov.sg/
           SEARCH_TERM: software+engineer
-          YEARS_OF_EXPERIENCE: oneToThree,fourToSix
+          YEARS_OF_EXPERIENCE: moreThanTen
           PROFILE: prod
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
 

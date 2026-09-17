@@ -20,10 +20,25 @@ PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 ## Proposed Flow
 1. Read from website using FetchResponse
 2. Parse into DTO using ResponseMapper
-3. Read records (seen) from S3
+3. Read records (seen) from S3 
 4. Dedupe fresh results against seen
 5. new records are scored and ranked
 6. Top N (per param) sent back to app to be sent as email
 7. Write fresh results into S3 
 
+### Dedupe process
+Records need to be checked against source and UUID.
+
 ## Todos
+
+## Observations 
+### Career@Gov
+- URL from the browser returns the entire catalogue and it is the actually the response from Algolia (which is what the service calls when a search is made) contains the relevant job posting IDs
+- Based on the samples from the career@gov, it shows that the years of experience are tied to the position and not to the framework or language which is easier for parsing
+- Also on the dedupe effort for career@gov, only the ID is required.
+
+But based on personal experience it is not the case for mcf
+
+
+Complete the GovScraper
+- Filtering for experience and employment term not done for the merging

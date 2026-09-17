@@ -1,6 +1,6 @@
 package com.chngy.jobscraper.Scraper.Implemented;
 
-import com.chngy.jobscraper.Common.ListingDTO;
+import com.chngy.jobscraper.DTO.ListingDTO;
 import com.chngy.jobscraper.Scraper.Scraper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class MCFScraper implements Scraper {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("Printing out the response : {}", response);
-        ListingDTO listingDTO = ListingDTO.builder().title("SoftwareDev").build();
+        ListingDTO listingDTO = ListingDTO.builder().jobTitle("SoftwareDev").build();
         return List.of(listingDTO);
     }
 }
