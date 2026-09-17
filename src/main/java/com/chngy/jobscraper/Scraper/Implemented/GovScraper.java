@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,19 +44,14 @@ public class GovScraper implements Scraper {
     private String baseUrl;
     @Value("${SEARCH_TERM:software+engineer}")
     private String searchTerm;
-    @Value("${YEARS_OF_EXPERIENCE:oneToThree}")
-    private List<String> yearsOfExperience;
-    @Value("${EMPLOYMENT_TERM:fullTime}")
+    @Value("${YEARS_OF_EXPERIENCE:4}")
+    private int yearsOfExperience;
+    @Value("${YEARS_OF_EXPERIENCE_BUFFER:1}")
+    private int yearsOfExperienceBuffer;
+    @Value("${EMPLOYMENT_TERM:perm}")
     private List<String> employmentTerm;
     @Value("${CAREER_GOV_SORT_BY:relevance}")
     private String sortCriteria;
-
-    private final String SEARCH_TERM_PREFIX = "s=";
-    private final String SORT_PREFIX = "o=";
-    private final String YOE_PREFIX = "e=";
-    private final String EMPLOYMENT_TERM_PREFIX = "t=";
-    private final String FIRST_ORDER_PREFIX = "?";
-    private final String SUBSEQUENT_PREFIX = "&";
 
     private String ALGOLIA_APP_ID = "3OW7D8B4IZ";
     private String ALGOLIA_API_KEY = "32fa71d8b0bc06be1e6395bf8c430107";
@@ -74,23 +71,28 @@ public class GovScraper implements Scraper {
         log.info("Entering Career Gov Scrapper");
 
         List<AlgoliaSearchResponseJobPost> hits = fetchAlgoliaHits();
+        log.info("*******************************************");
         log.info("Algolia returned {} ranked hits for '{}'", hits.size(), getPlainSearchTerm());
 
         List<GovSearchResponseJobPost> jobsCatalog = fetchFullCatalogById();
+        log.info("*******************************************");
         log.info("Full catalog fetch catalog : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jobsCatalog));
         log.info("Full catalog fetch returned {} postings", jobsCatalog.size());
 
         List<GovSearchResponseJobPost> listingsFilteredBySearchTerm = mergeHitsWithCatalog(hits, jobsCatalog);
+        log.info("*******************************************");
+        log.info("listingsFilteredBySearchTerm : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsFilteredBySearchTerm));
+        log.info("listingsFilteredBySearchTerm count: {}", listingsFilteredBySearchTerm.size());
 
         List<ListingDTO> listingsWithoutJD = CareerGovJobPostingMapper.toListingDTOs(listingsFilteredBySearchTerm, baseUrl);
-
+        log.info("*******************************************");
         log.info("listingsWithoutJD : {}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsWithoutJD));
         log.info("listingsWithoutJD count: {}", listingsWithoutJD.size());
         
-//        List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
+        List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
         
-        List<ListingDTO> finalPostings = populateJobDescription(listingsWithoutJD);
-
+        List<ListingDTO> finalPostings = populateJobDescription(filteredListingsWithoutJD);
+        log.info("*******************************************");
         log.info("finalPostings : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalPostings));
         log.info("finalPostings count : {}", finalPostings.size());
 
@@ -98,9 +100,30 @@ public class GovScraper implements Scraper {
     }
 
     // reduce the number of postings by applying filters
-//    List<ListingDTO> filterPostings(List<ListingDTO> listingDTOS) {
-//        return
-//    }
+    List<ListingDTO> filterPostings(List<ListingDTO> listingDTOS) {
+        Pair<Integer, Integer> yoeRange = Pair.of(
+                Math.max(0, yearsOfExperience - yearsOfExperienceBuffer),
+                yearsOfExperience + yearsOfExperienceBuffer
+        );
+        log.info("yoeRange : {}", yoeRange);
+        return listingDTOS.stream()
+                .filter(listing -> {
+                    log.info("Filtering postings: posting id : {}", listing.id());
+                    if (listing.experienceRange() == null ||
+                            listing.experienceRange().getLeft() == null && listing.experienceRange().getRight() == null){
+                        log.info("returned");
+                        return true;
+                    }
+                    IntPredicate yoeMatch = desiredYoe -> listing.experienceRange().getLeft() <= desiredYoe && listing.experienceRange().getRight() >= desiredYoe;
+                    log.info("range provided");
+                    log.info("listing.experienceRange().getLeft() : {}", listing.experienceRange().getLeft());
+                    log.info("listing.experienceRange().getRight() : {}", listing.experienceRange().getRight());
+                    log.info("yoeMatch.test(yoeRange.getLeft()) : {}", yoeMatch.test(yoeRange.getLeft()));
+                    log.info("yoeMatch.test(yoeRange.getRight()) : {}", yoeMatch.test(yoeRange.getRight()));
+                    return yoeMatch.test(yoeRange.getLeft()) || yoeMatch.test(yoeRange.getRight());
+                })
+                .collect(Collectors.toList());
+    }
     
     // ---------------------------------------------------------------
     // Algolia call — ranked object IDs for the free-text search only.
@@ -138,7 +161,7 @@ public class GovScraper implements Scraper {
     // none of which Algolia's response carries.
     // ---------------------------------------------------------------
     private List<GovSearchResponseJobPost> fetchFullCatalogById() throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(buildURL()))
+        HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl))
                 .header("Accept", "text/html")
                 .GET()
                 .build();
@@ -148,7 +171,7 @@ public class GovScraper implements Scraper {
         return parser.extractJobsFromRsc(response.body());
     }
 
-    // Match the listings from the full catagloue vs what is retrieved from the search term
+    // Match the listings from the full catalogue vs what is retrieved from the search term
     private List<GovSearchResponseJobPost> mergeHitsWithCatalog(List<AlgoliaSearchResponseJobPost> hits, List<GovSearchResponseJobPost> jobCatalogue) {
 
         Set<String> hitIds = hits.stream()
@@ -166,44 +189,6 @@ public class GovScraper implements Scraper {
         return colonIdx == -1 ? objectID : objectID.substring(colonIdx + 1);
     }
 
-    // url would be like
-    // https://jobs.careers.gov.sg/?s=software+engineer&t=Full-time;Internship&e=1+-+3+years;4+-+6+years;0+-+1+year;7+-+9+years;%3E+10+years
-    // the first param would be appended with ? then the rest will follow &
-    String buildURL() {
-        ArrayList<String> searchFilter = new ArrayList<>();
-        String searchTerm = getSearchTerm();
-        String filters = getFilter();
-        String sort = getSort();
-        if (StringUtils.isNotBlank(searchTerm)) {
-            searchFilter.add(searchTerm);
-        }
-        if (StringUtils.isNotBlank(filters)) {
-            searchFilter.add(filters);
-        }
-        if (StringUtils.isNotBlank(sort)) {
-            searchFilter.add(sort);
-        }
-        String returnString = searchFilter.isEmpty() ? "" : FIRST_ORDER_PREFIX + String.join(SUBSEQUENT_PREFIX, searchFilter);
-        return baseUrl + returnString;
-    }
-
-    private String getSort() {
-        if (EnumUtils.isValidEnumIgnoreCase(GovSortBy.class, sortCriteria)){
-            return SORT_PREFIX + GovSortBy.valueOf(sortCriteria).getCode();
-        }
-        log.warn("Invalid Sort Criteria, returning empty");
-        return "";
-    }
-
-    // every space will be replaced with a + (for building the URL only —
-    // see getPlainSearchTerm() for the form Algolia's JSON body needs)
-    private String getSearchTerm(){
-        if (StringUtils.isBlank(searchTerm)) {
-            return "";
-        }
-        return SEARCH_TERM_PREFIX + searchTerm.replace(" ","+");
-    }
-
     // Algolia's "query" field is plain JSON text, not a URL — it wants real
     // spaces, not the "+"-joined form used for the browser URL. Previously
     // buildRequestBody() passed the raw searchTerm straight through, so a
@@ -214,46 +199,6 @@ public class GovScraper implements Scraper {
             return "";
         }
         return searchTerm.replace("+", " ").trim();
-    }
-
-    // Take the appropriate filters, paste the value of the enums in it or return empty if
-    // incorrect
-    private String getFilter() {
-        List<String> validEmploymentTerm = getValidEmploymentTermCodes();
-        List<String> validYearsOfExperience = getValidYoeCodes();
-
-        if (validEmploymentTerm.isEmpty() && validYearsOfExperience.isEmpty()) {
-            log.warn("Both Employment Term and YOE is empty");
-            return "";
-        }
-        if (validEmploymentTerm.isEmpty()) {
-            return YOE_PREFIX + String.join(";",validYearsOfExperience);
-        }
-
-        if (validYearsOfExperience.isEmpty()){
-            return EMPLOYMENT_TERM_PREFIX + String.join(";",validEmploymentTerm);
-        }
-
-        return EMPLOYMENT_TERM_PREFIX
-                + String.join(";",validEmploymentTerm)
-                + SUBSEQUENT_PREFIX + YOE_PREFIX
-                + String.join(";",validYearsOfExperience);
-    }
-
-    // Extracted from getFilter() so the same source-of-truth code list can be
-    // reused for local (post-catalog-fetch) filtering in matchesFilters().
-    private List<String> getValidEmploymentTermCodes() {
-        return employmentTerm == null ? List.of() : employmentTerm.stream()
-                .filter(empTerm -> EnumUtils.isValidEnumIgnoreCase(GovEmploymentType.class, empTerm))
-                .map(empTerm -> GovEmploymentType.valueOf(empTerm).getCode())
-                .toList();
-    }
-
-    private List<String> getValidYoeCodes() {
-        return yearsOfExperience == null ? List.of() : yearsOfExperience.stream()
-                .filter(yoe -> EnumUtils.isValidEnumIgnoreCase(GovYoe.class, yoe))
-                .map(yoe -> GovYoe.valueOf(yoe).getCode())
-                .toList();
     }
 
     private String buildRequestBody() throws JsonProcessingException {
@@ -284,14 +229,14 @@ public class GovScraper implements Scraper {
 
     private String returnJobDescription(String url) throws IOException, InterruptedException {
         if (url.isBlank()) return "";
-        log.info("Attempting to return JD with url : {}", url);
+//        log.info("Attempting to return JD with url : {}", url);
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .header("Accept", "text/html")
                 .header("User-Agent", BROWSER_USER_AGENT)
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        log.info("Reading response statusCode: {}", response.statusCode());
+//        log.info("Reading response statusCode: {}", response.statusCode());
 //        log.info("Reading response body: {}", response.body());
 //        Document document = Jsoup.parse(response.body());
 //        log.info("Reading response body after parsing: {}", document.body());
