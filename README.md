@@ -30,7 +30,12 @@ PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 Records need to be checked against source and UUID.
 
 ## Todos
-Need to understand how to return the message in SNS when the results are being returned
+- Tag resources in aws with project:jobscraper
+- Add cost monitoring in aws
+- Run in aws and see what happens
+- Write scorer
+- Need to understand how to return the message in SNS when the results are being returned
+- Write test cases
 
 ## Observations 
 ### Career@Gov

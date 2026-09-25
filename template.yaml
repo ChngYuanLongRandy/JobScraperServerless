@@ -15,8 +15,8 @@ Resources:
         Variables:
           CAREER_GOV_URL: https://jobs.careers.gov.sg/
           MY_CAREER_FUTURES_URL: https://www.mycareersfuture.gov.sg/
-          S3_BUCKET_NAME: jobscraper
-          S3_KEY_NAME: seen
+          S3_BUCKET_NAME: jobscraper-366667683184-ap-southeast-1-an
+          S3_KEY_NAME: data/seen
           SEARCH_TERM: software+engineer
           YEARS_OF_EXPERIENCE: 4
           YEARS_OF_EXPERIENCE_BUFFER: 1

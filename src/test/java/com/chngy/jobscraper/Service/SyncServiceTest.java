@@ -32,7 +32,7 @@ public class SyncServiceTest {
                 ListingDTO.builder()
                     .employmentType("perm")
                     .company("Starbucks")
-                    .closingTimestamp()
+//                    .closingTimestamp()
                     .build(),
                 ListingDTO.builder().build()
         );
