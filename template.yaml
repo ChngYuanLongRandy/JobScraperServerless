@@ -15,7 +15,8 @@ Resources:
         Variables:
           CAREER_GOV_URL: https://jobs.careers.gov.sg/
           MY_CAREER_FUTURES_URL: https://www.mycareersfuture.gov.sg/
-          BUCKET_NAME: randomBucketName
+          S3_BUCKET_NAME: jobscraper
+          S3_KEY_NAME: seen
           SEARCH_TERM: software+engineer
           YEARS_OF_EXPERIENCE: 4
           YEARS_OF_EXPERIENCE_BUFFER: 1
@@ -23,6 +24,9 @@ Resources:
           SALARY: 6000
           SALARY_BUFFER: 1000
           PROFILE: prod
+          JOBS: gov,mcf
+          NUMBER_OF_RESULTS: 5
+          FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
 
       # Attach policies here to give the function permission to access other AWS resources if needed

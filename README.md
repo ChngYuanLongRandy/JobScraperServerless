@@ -30,6 +30,7 @@ PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 Records need to be checked against source and UUID.
 
 ## Todos
+Need to understand how to return the message in SNS when the results are being returned
 
 ## Observations 
 ### Career@Gov

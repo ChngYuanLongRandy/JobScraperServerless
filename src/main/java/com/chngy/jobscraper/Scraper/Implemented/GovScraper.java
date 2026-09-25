@@ -63,7 +63,7 @@ public class GovScraper implements Scraper {
     private final Parser parser;
     private final ObjectMapper objectMapper;
 
-    public List<ListingDTO> Search() throws IOException, InterruptedException {
+    public List<ListingDTO> search() throws IOException, InterruptedException {
         log.info("Entering Career Gov Scrapper");
 
         List<AlgoliaSearchResponseJobPost> hits = fetchAlgoliaHits();
