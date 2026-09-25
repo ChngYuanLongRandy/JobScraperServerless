@@ -6,5 +6,5 @@ import java.io.IOException;
 import java.util.List;
 
 public interface Scraper {
-    List<ListingDTO> Search() throws IOException, InterruptedException;
+    List<ListingDTO> search() throws IOException, InterruptedException;
 }

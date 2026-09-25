@@ -24,7 +24,7 @@ public class MCFScraper implements Scraper {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public List<ListingDTO> Search() throws IOException, InterruptedException {
+    public List<ListingDTO> search() throws IOException, InterruptedException {
         log.info("Entering MCF Scrapper");
         HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());

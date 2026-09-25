@@ -54,7 +54,7 @@ public class GovScraper_original implements Scraper {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public List<ListingDTO> Search() throws IOException, InterruptedException {
+    public List<ListingDTO> search() throws IOException, InterruptedException {
         log.info("Entering Career Gov Scrapper");
 //        HttpRequest request = HttpRequest.newBuilder(URI.create(buildURL())).POST().build();
         HttpRequest request = HttpRequest.newBuilder(URI.create("https://3ow7d8b4iz-dsn.algolia.net/1/indexes/job_index/query"))
