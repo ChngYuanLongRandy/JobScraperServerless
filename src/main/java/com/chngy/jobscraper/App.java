@@ -29,7 +29,9 @@ public class App implements RequestHandler<Map<String, String>, String> {
     private S3AsyncClient s3Client;
     private SnsClient snsClient;
     private final Orchestrator orchestrator;
+    // The reason why this is used its because this is not managed by Spring
     final String PROFILE = System.getenv("PROFILE");
+    private final String TOPIC_NAME = System.getenv("SNS_TOPIC_ARN");
     boolean isDev = Strings.isNotEmpty(PROFILE) && PROFILE.equalsIgnoreCase("dev");
 
     public App() {

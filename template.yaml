@@ -15,6 +15,7 @@ Resources:
         Variables:
           CAREER_GOV_URL: https://jobs.careers.gov.sg/
           MY_CAREER_FUTURES_URL: https://www.mycareersfuture.gov.sg/
+          SNS_TOPIC_NAME: arn:aws:sns:ap-southeast-1:366667683184:job-scraper-lambda-results
           S3_BUCKET_NAME: jobscraper-366667683184-ap-southeast-1-an
           S3_KEY_NAME: data/seen
           SEARCH_TERM: software+engineer
