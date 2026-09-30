@@ -78,7 +78,7 @@ public class S3ClientService {
             return;
         }
         try {
-            body = objectMapper.writeValueAsBytes(data);
+            body = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(data);
         }
         catch (JsonProcessingException exception) {
             log.error("Unable to get write data due to {} ", exception.getMessage());
