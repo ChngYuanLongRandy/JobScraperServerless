@@ -48,11 +48,11 @@ public class SyncService {
     public List<ListingDTO> dedupeData (List<ListingDTO> freshData, List<ListingDTO> retrievedDataFromS3) throws JsonProcessingException {
         log.info("Deduping data, fresh data size: {}, retrievedDataFromS3 size: {}", freshData.size(), retrievedDataFromS3.size());
         Set<ListingDTO> freshDataSet = new HashSet<>(freshData);
-        log.info("FreshSet : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(freshDataSet));
+//        log.info("FreshSet : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(freshDataSet));
         Set<ListingDTO> retrievedDataSetFromS3 = new HashSet<>(retrievedDataFromS3);
-        log.info("retrievedDataSetFromS3 : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(retrievedDataSetFromS3));
+//        log.info("retrievedDataSetFromS3 : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(retrievedDataSetFromS3));
         freshDataSet.removeAll(retrievedDataSetFromS3);
-        log.info("FreshSet after removing: {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(freshDataSet));
+//        log.info("FreshSet after removing: {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(freshDataSet));
         return freshDataSet.stream().toList();
     }
 
