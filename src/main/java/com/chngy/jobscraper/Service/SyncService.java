@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -18,6 +19,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("!dev")
 public class SyncService {
     private final S3ClientService s3ClientService;
     private final ObjectMapper objectMapper;
@@ -36,14 +38,14 @@ public class SyncService {
     }
 
     // retrieve the data from s3
-    List<ListingDTO> retrieveData() {
+    public List<ListingDTO> retrieveData() {
         log.info("Retrieving Data");
         return s3ClientService.getData();
     }
 
     // compare against what is present in s3
     // remove them and from fresh results
-    List<ListingDTO> dedupeData (List<ListingDTO> freshData, List<ListingDTO> retrievedDataFromS3) throws JsonProcessingException {
+    public List<ListingDTO> dedupeData (List<ListingDTO> freshData, List<ListingDTO> retrievedDataFromS3) throws JsonProcessingException {
         log.info("Deduping data, fresh data size: {}, retrievedDataFromS3 size: {}", freshData.size(), retrievedDataFromS3.size());
         Set<ListingDTO> freshDataSet = new HashSet<>(freshData);
         log.info("FreshSet : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(freshDataSet));
@@ -55,7 +57,7 @@ public class SyncService {
     }
 
     // use deduped results and add to the back to s3
-    void syncData(List<ListingDTO> dedupedData, List<ListingDTO> retrievedDataFromS3){
+    public void syncData(List<ListingDTO> dedupedData, List<ListingDTO> retrievedDataFromS3){
         retrievedDataFromS3.addAll(dedupedData);
         List<ListingDTO> newerData = retrievedDataFromS3.stream()
                 .filter(data -> {

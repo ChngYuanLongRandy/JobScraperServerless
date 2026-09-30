@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
@@ -20,6 +21,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Profile("!dev")
 public class S3ClientService {
     private final S3AsyncClient s3AsyncClient;
     private final ObjectMapper objectMapper;

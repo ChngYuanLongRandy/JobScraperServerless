@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface Scraper {
     List<ListingDTO> search() throws IOException, InterruptedException;
+    List<ListingDTO> populateJobDescription(List<ListingDTO> listingDTOs) throws IOException, InterruptedException;
 }

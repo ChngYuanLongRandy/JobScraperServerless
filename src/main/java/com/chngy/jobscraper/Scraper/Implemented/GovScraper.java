@@ -87,16 +87,17 @@ public class GovScraper implements Scraper {
         
         List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
         
-        List<ListingDTO> finalPostings = populateJobDescription(filteredListingsWithoutJD);
+//        List<ListingDTO> finalPostings = populateJobDescription(filteredListingsWithoutJD);
         log.info("*******************************************");
-        log.info("finalPostings : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalPostings));
-        log.info("finalPostings count : {}", finalPostings.size());
+//        log.info("finalPostings : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalPostings));
+//        log.info("finalPostings count : {}", finalPostings.size());
 
-        return finalPostings;
+        return filteredListingsWithoutJD;
     }
 
     // reduce the number of postings by applying filters
     List<ListingDTO> filterPostings(List<ListingDTO> listingDTOS) {
+        log.info("Filtering Postings...");
         Pair<Integer, Integer> yoeRange = Pair.of(
                 Math.max(0, yearsOfExperience - yearsOfExperienceBuffer),
                 yearsOfExperience + yearsOfExperienceBuffer
@@ -211,7 +212,8 @@ public class GovScraper implements Scraper {
     }
 
     // API calls are intentionally made blocking in order to not overwhelm server
-    private List<ListingDTO> populateJobDescription(List<ListingDTO> jobCatalogue) throws IOException, InterruptedException {
+    public List<ListingDTO> populateJobDescription(List<ListingDTO> jobCatalogue) throws IOException, InterruptedException {
+        log.info("Populating Job Descriptions...");
         List<ListingDTO> jobsWithJDs = new ArrayList<>();
         for (ListingDTO job : jobCatalogue) {
             String jd = returnJobDescription(job.url());

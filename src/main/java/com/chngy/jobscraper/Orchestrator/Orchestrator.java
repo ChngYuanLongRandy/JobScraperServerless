@@ -6,21 +6,25 @@ import com.chngy.jobscraper.Scraper.Implemented.MCFScraper;
 import com.chngy.jobscraper.Scraper.Scraper;
 import com.chngy.jobscraper.Service.Scorer;
 import com.chngy.jobscraper.Service.SyncService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class Orchestrator {
-    private final SyncService syncService;
+    // to avoid error when constructing orchestrator bean in dev
+    private final Optional<SyncService> syncService;
     private final GovScraper govScraper;
     private final MCFScraper mcfScraper;
     private final Scorer scorer;
@@ -50,12 +54,32 @@ public class Orchestrator {
             }
 
             try {
-                List<ListingDTO> tempDTOs = scraper.search();
+                List<ListingDTO> tempDTOsWithOutJDs = scraper.search();
                 List<ListingDTO> dedupedDTOs = List.of();
-                if (!isDev){
-                    dedupedDTOs = syncService.process(tempDTOs);
+
+                // If it is in production I need s3 service to be enabled and functioning
+                if (!isDev && syncService.isPresent()){
+                    log.info("Prod env, entering s3 services");
+                    SyncService concreteSyncService = syncService.get();
+                    List<ListingDTO> seenDTO = concreteSyncService.retrieveData();
+                    try {
+                        dedupedDTOs = concreteSyncService.dedupeData(tempDTOsWithOutJDs, seenDTO);
+                    }
+                    catch (JsonProcessingException exception) {
+                        log.error("JsonProcessingException with error: {}", exception.getMessage());
+                    }
+                    catch (Exception exception) {
+                        log.error("Technical Error occurred: {}", exception.getMessage());
+                    }
                 }
-                List<ListingDTO> shortlistedDTOs = scorer.score(isDev ? tempDTOs: dedupedDTOs);
+                else {
+                    log.info("in Dev environment, proceeding without s3Services");
+                }
+                // if not prod it will be populating with empty list
+                List<ListingDTO> tempDTOsWithJDs = scraper.populateJobDescription(dedupedDTOs);
+
+                // Scoring
+                List<ListingDTO> shortlistedDTOs = scorer.score(tempDTOsWithJDs);
                 totalDTOs.addAll(shortlistedDTOs);
             }
 

@@ -1,3 +1,9 @@
 # Ignore build
 /target
 /logs
+# Artifact of SAM Build
+/.aws-sam
+# Claude settings
+/.claude
+#intelij settings
+/.idea

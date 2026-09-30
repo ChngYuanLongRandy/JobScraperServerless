@@ -32,4 +32,8 @@ public class MCFScraper implements Scraper {
         ListingDTO listingDTO = ListingDTO.builder().jobTitle("SoftwareDev").build();
         return List.of(listingDTO);
     }
+
+    public List<ListingDTO> populateJobDescription(List<ListingDTO> listingDTOs) throws IOException, InterruptedException {
+        return List.of(ListingDTO.builder().build());
+    }
 }
