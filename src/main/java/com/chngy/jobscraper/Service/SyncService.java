@@ -22,7 +22,7 @@ import java.util.Set;
 @Profile("!dev")
 public class SyncService {
     private final S3ClientService s3ClientService;
-    private final ObjectMapper objectMapper;
+//    private final ObjectMapper objectMapper;
 
     @Value("${FILTER_OUT_RESULTS_DAYS_AGO:14}")
     private int DAYS_FILTER;
