@@ -25,7 +25,7 @@ Resources:
           SALARY: 6000
           SALARY_BUFFER: 1000
           PROFILE: prod
-          JOBS: gov,mcf
+          JOBS: gov
           NUMBER_OF_RESULTS: 5
           FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,17 +59,17 @@ public class SyncService {
 
     // use deduped results and add to the back to s3
     public void syncData(List<ListingDTO> dedupedData, List<ListingDTO> retrievedDataFromS3){
-        retrievedDataFromS3.addAll(dedupedData);
-        List<ListingDTO> newerData = retrievedDataFromS3.stream()
+        List<ListingDTO> combinedData = new ArrayList<>(retrievedDataFromS3);
+        combinedData.addAll(dedupedData);
+        List<ListingDTO> newerData = combinedData.stream()
                 .filter(data -> {
                     long closingTimeStamp = Long.parseLong(data.closingTimestamp());
-                    long openingTimeStamp = Long.parseLong(data.openingTimestamp());
+//                    long openingTimeStamp = Long.parseLong(data.openingTimestamp());
                     long currentTimeStamp = System.currentTimeMillis();
-                    long pastTimeStamp = Instant.now().minus(DAYS_FILTER, ChronoUnit.DAYS).toEpochMilli();
-
-                    if (closingTimeStamp > currentTimeStamp) return false;
+//                    long pastTimeStamp = Instant.now().minus(DAYS_FILTER, ChronoUnit.DAYS).toEpochMilli();
+                    if (closingTimeStamp < currentTimeStamp) return false;
                     // I see sometimes closing TimeStamp is invalid (year 9999)
-                    if (openingTimeStamp > pastTimeStamp) return false;
+//                    if (openingTimeStamp < pastTimeStamp) return false;
                     return true;
                 }).toList();
         s3ClientService.putData(newerData);
