@@ -72,17 +72,17 @@ public class GovScraper implements Scraper {
 
         List<GovSearchResponseJobPost> jobsCatalog = fetchFullCatalogById();
         log.info("*******************************************");
-        log.info("Full catalog fetch catalog : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jobsCatalog));
+//        log.info("Full catalog fetch catalog : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jobsCatalog));
         log.info("Full catalog fetch returned {} postings", jobsCatalog.size());
 
         List<GovSearchResponseJobPost> listingsFilteredBySearchTerm = mergeHitsWithCatalog(hits, jobsCatalog);
         log.info("*******************************************");
-        log.info("listingsFilteredBySearchTerm : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsFilteredBySearchTerm));
+//        log.info("listingsFilteredBySearchTerm : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsFilteredBySearchTerm));
         log.info("listingsFilteredBySearchTerm count: {}", listingsFilteredBySearchTerm.size());
 
         List<ListingDTO> listingsWithoutJD = CareerGovJobPostingMapper.toListingDTOs(listingsFilteredBySearchTerm, baseUrl);
         log.info("*******************************************");
-        log.info("listingsWithoutJD : {}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsWithoutJD));
+//        log.info("listingsWithoutJD : {}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsWithoutJD));
         log.info("listingsWithoutJD count: {}", listingsWithoutJD.size());
         
         List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
