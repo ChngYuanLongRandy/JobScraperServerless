@@ -56,14 +56,17 @@ public class Orchestrator {
             try {
                 List<ListingDTO> tempDTOsWithOutJDs = scraper.search();
                 List<ListingDTO> dedupedDTOs = List.of();
+                List<ListingDTO> seenDTO = List.of();
 
                 // If it is in production I need s3 service to be enabled and functioning
                 if (!isDev && syncService.isPresent()){
                     log.info("Prod env, entering s3 services");
                     SyncService concreteSyncService = syncService.get();
-                    List<ListingDTO> seenDTO = concreteSyncService.retrieveData();
+                    seenDTO = concreteSyncService.retrieveData();
+                    log.info("Prod env, seenDTO size : {}", seenDTO.size());
                     try {
                         dedupedDTOs = concreteSyncService.dedupeData(tempDTOsWithOutJDs, seenDTO);
+                        log.info("Prod env, dedupedDTOs size : {}", dedupedDTOs.size());
                     }
                     catch (JsonProcessingException exception) {
                         log.error("JsonProcessingException with error: {}", exception.getMessage());
@@ -78,7 +81,13 @@ public class Orchestrator {
                 // if not prod it will be populating with empty list
                 List<ListingDTO> tempDTOsWithJDs = scraper.populateJobDescription(dedupedDTOs);
 
+                if (!isDev && syncService.isPresent()){
+                    SyncService concreteSyncService = syncService.get();
+                    concreteSyncService.syncData(tempDTOsWithJDs, seenDTO);
+                }
+
                 // Scoring
+                log.info("Scoring Listings");
                 List<ListingDTO> shortlistedDTOs = scorer.score(tempDTOsWithJDs);
                 totalDTOs.addAll(shortlistedDTOs);
             }

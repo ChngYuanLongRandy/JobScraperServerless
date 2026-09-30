@@ -26,7 +26,6 @@ import static com.chngy.jobscraper.Common.Constants.*;
  */
 @Slf4j
 public class App implements RequestHandler<Map<String, String>, String> {
-    private S3AsyncClient s3Client;
     private SnsClient snsClient;
     private final AnnotationConfigApplicationContext ctx;
     private final Orchestrator orchestrator;
@@ -40,7 +39,6 @@ public class App implements RequestHandler<Map<String, String>, String> {
         // It is initialized when the class is loaded.
         log.info("Profile is: {}", PROFILE);
         if (!isDev){
-            s3Client = DependencyFactory.s3Client();
             snsClient = SnsClient.builder().build();
         }
         ctx = new AnnotationConfigApplicationContext();

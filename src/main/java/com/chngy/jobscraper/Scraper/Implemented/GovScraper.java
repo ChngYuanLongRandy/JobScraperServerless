@@ -86,7 +86,8 @@ public class GovScraper implements Scraper {
         log.info("listingsWithoutJD count: {}", listingsWithoutJD.size());
         
         List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
-        
+        log.info("filteredListingsWithoutJD count: {}", filteredListingsWithoutJD.size());
+
 //        List<ListingDTO> finalPostings = populateJobDescription(filteredListingsWithoutJD);
         log.info("*******************************************");
 //        log.info("finalPostings : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalPostings));
