@@ -10,7 +10,7 @@ Resources:
       Handler: com.chngy.jobscraper.App::handleRequest
       Timeout: 60
       MemorySize: 512
-      CodeUri: ./target/job-scraper-lambda.jar
+      CodeUri: .
       Environment:
         Variables:
           CAREER_GOV_URL: https://jobs.careers.gov.sg/
@@ -29,10 +29,23 @@ Resources:
           NUMBER_OF_RESULTS: 5
           FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
-
-      # Attach policies here to give the function permission to access other AWS resources if needed
-      # See: https://github.com/awslabs/serverless-application-model/blob/master/docs/policy_templates.rst
-      # eg:
-      #Policies:
-      # - S3ReadPolicy:
-      #     BucketName: test-bucket
+      Tags:
+        project: jobscraper
+      Policies:
+        - S3CrudPolicy:
+            BucketName: jobscraper-366667683184-ap-southeast-1-an
+        - SNSPublishMessagePolicy:
+            TopicName: job-scraper-lambda-results
+      Events:
+        WeeklyTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: rate(7 days)
+  AppFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AppFunction}
+      RetentionInDays: 14
+      Tags:
+        - Key: project
+          Value: jobscraper

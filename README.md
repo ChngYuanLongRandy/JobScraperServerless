@@ -10,9 +10,18 @@ The purpose of this app is to be run in a lambda function with accompanying S3 b
 - Java 25
 - Apache Maven
 - s3 buckets
+- SAM cli installed
+- AWS cli installed
+- AWS User Access Key
 
 ## How to Use
-- Setup scheduler to run this function
+- if there are any adjustments
+  - configure in template.yaml
+  - sam validate
+  - mvn clean package
+  - sam build
+  - sam deploy --guided
+- If testing is needed, to test it in the lambda function itself
 
 ## Local Env Var
 PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
@@ -30,8 +39,6 @@ PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 Records need to be checked against source and UUID.
 
 ## Todos
-- Tag resources in aws with project:jobscraper
-- Add cost monitoring in aws
 - Run in aws and see what happens
 - Write scorer
 - Need to understand how to return the message in SNS when the results are being returned

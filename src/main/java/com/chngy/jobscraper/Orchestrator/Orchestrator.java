@@ -25,7 +25,7 @@ public class Orchestrator {
     private final MCFScraper mcfScraper;
     private final Scorer scorer;
 
-    @Value("${JOBS:gov}")
+    @Value("#{'${JOBS:gov}'.split(',')}")
     private List<String> JOBS;
 
     final String PROFILE = System.getenv("PROFILE");
@@ -42,6 +42,7 @@ public class Orchestrator {
     public List<ListingDTO> runJobs() {
         List<ListingDTO> totalDTOs = new ArrayList<>();
         for (String job: JOBS) {
+            log.info("Running job : {} ", job);
             Scraper scraper = getScraper(job);
             if (scraper == null) {
                 log.error("Returned scrapper is null for job: {}, it will not be executed", job);

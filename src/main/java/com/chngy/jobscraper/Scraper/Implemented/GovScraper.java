@@ -101,21 +101,21 @@ public class GovScraper implements Scraper {
                 Math.max(0, yearsOfExperience - yearsOfExperienceBuffer),
                 yearsOfExperience + yearsOfExperienceBuffer
         );
-        log.info("yoeRange : {}", yoeRange);
+//        log.info("yoeRange : {}", yoeRange);
         return listingDTOS.stream()
                 .filter(listing -> {
-                    log.info("Filtering postings: posting id : {}", listing.id());
+//                    log.info("Filtering postings: posting id : {}", listing.id());
                     if (listing.experienceRange() == null ||
                             listing.experienceRange().getLeft() == null && listing.experienceRange().getRight() == null){
-                        log.info("returned");
+//                        log.info("returned");
                         return true;
                     }
                     IntPredicate yoeMatch = desiredYoe -> listing.experienceRange().getLeft() <= desiredYoe && listing.experienceRange().getRight() >= desiredYoe;
-                    log.info("range provided");
-                    log.info("listing.experienceRange().getLeft() : {}", listing.experienceRange().getLeft());
-                    log.info("listing.experienceRange().getRight() : {}", listing.experienceRange().getRight());
-                    log.info("yoeMatch.test(yoeRange.getLeft()) : {}", yoeMatch.test(yoeRange.getLeft()));
-                    log.info("yoeMatch.test(yoeRange.getRight()) : {}", yoeMatch.test(yoeRange.getRight()));
+//                    log.info("range provided");
+//                    log.info("listing.experienceRange().getLeft() : {}", listing.experienceRange().getLeft());
+//                    log.info("listing.experienceRange().getRight() : {}", listing.experienceRange().getRight());
+//                    log.info("yoeMatch.test(yoeRange.getLeft()) : {}", yoeMatch.test(yoeRange.getLeft()));
+//                    log.info("yoeMatch.test(yoeRange.getRight()) : {}", yoeMatch.test(yoeRange.getRight()));
                     return yoeMatch.test(yoeRange.getLeft()) || yoeMatch.test(yoeRange.getRight());
                 })
                 .collect(Collectors.toList());
@@ -249,9 +249,8 @@ public class GovScraper implements Scraper {
         try{
             JsonNode jobPosting = objectMapper.readTree(script.data());
             String descriptionHtml = jobPosting.path("description").asText("");
-            String jdText = Jsoup.parse(descriptionHtml).text();
-            log.info("jd text: {}", jdText);
-            return jdText;
+            return Jsoup.parse(descriptionHtml).text();
+//            log.info("jd text: {}", jdText);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse JSON-LD JobPosting block", e);
         }
