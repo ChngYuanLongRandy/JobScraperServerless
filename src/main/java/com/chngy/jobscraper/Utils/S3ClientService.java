@@ -13,10 +13,12 @@ import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,8 +39,22 @@ public class S3ClientService {
                 .key(S3_KEY_NAME)
                 .build();
 
-        byte[] body = s3AsyncClient.getObject(getObjectRequest, AsyncResponseTransformer.toBytes())
-                .join().asByteArray();
+        byte[] body;
+
+        try {
+            body = s3AsyncClient.getObject(getObjectRequest, AsyncResponseTransformer.toBytes())
+                    .join().asByteArray();
+        }
+
+        catch (CompletionException exception) {
+            if (exception.getCause() instanceof NoSuchKeyException) {
+                log.info("Object not created yet at s3://{}/{}", S3_BUCKET_NAME, S3_KEY_NAME);
+                return List.of();
+            }
+            else {
+                throw exception;
+            }
+        }
 
         try {
             return objectMapper.readValue(body, new TypeReference<>() {});
