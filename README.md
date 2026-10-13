@@ -29,20 +29,22 @@ PROFILE=dev;LOG4J_CONFIGURATION_FILE=log4j2-dev.xml
 ## Proposed Flow
 1. Read from website using FetchResponse
 2. Parse into DTO using ResponseMapper
+3. (optional) remove stale but not expired records
 3. Read records (seen) from S3 
 4. Dedupe fresh results against seen
+5. Fetch JDs
+6. Sync data
 5. new records are scored and ranked
 6. Top N (per param) sent back to app to be sent as email
-7. Write fresh results into S3 
 
 ### Dedupe process
 Records need to be checked against source and UUID.
 
 ## Todos
-- Run in aws and see what happens
-- Write scorer
+- Write scorer -> left comparator in order to get the Top N
 - Need to understand how to return the message in SNS when the results are being returned
 - Write test cases
+- Complete mcf scraper (optional)
 
 ## Observations 
 ### Career@Gov

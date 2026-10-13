@@ -29,6 +29,8 @@ Resources:
           NUMBER_OF_RESULTS: 5
           FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
+          POSITIVE_SCORER_ITEMS: java, javascript, typescript, react, spring
+          NEGATIVE_SCORER_ITEMS: react native, python, lead, leadership, architect, architecture, rust, .net, asp, senior, mentor, php
       Tags:
         project: jobscraper
       Policies:

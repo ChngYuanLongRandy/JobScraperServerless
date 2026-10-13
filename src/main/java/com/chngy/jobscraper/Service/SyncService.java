@@ -45,6 +45,7 @@ public class SyncService {
     }
 
     // compare against what is present in s3
+    // dedupe logic based on UUID and job title
     // remove them and from fresh results
     public List<ListingDTO> dedupeData (List<ListingDTO> freshData, List<ListingDTO> retrievedDataFromS3) throws JsonProcessingException {
         log.info("Deduping data, fresh data size: {}, retrievedDataFromS3 size: {}", freshData.size(), retrievedDataFromS3.size());
