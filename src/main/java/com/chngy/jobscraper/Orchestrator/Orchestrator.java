@@ -32,6 +32,14 @@ public class Orchestrator {
     @Value("#{'${JOBS:gov}'.split(',')}")
     private List<String> JOBS;
 
+    // false = skip the Scorer and the top-N email; the full listings go to S3 for downstream filtering instead.
+    @Value("${PUBLISH_TOP_RESULTS:true}")
+    private boolean publishTopResults;
+
+    public boolean isPublishTopResults() {
+        return publishTopResults;
+    }
+
     final String PROFILE = System.getenv("PROFILE");
     boolean isDev = Strings.isNotEmpty(PROFILE) && PROFILE.equalsIgnoreCase("dev");
 
@@ -83,13 +91,20 @@ public class Orchestrator {
 
                 if (!isDev && syncService.isPresent()){
                     SyncService concreteSyncService = syncService.get();
+                    // Run file first, then mark as seen: if the write fails nothing is marked and the next run retries.
+                    concreteSyncService.writeRun(tempDTOsWithJDs);
                     concreteSyncService.syncData(tempDTOsWithJDs, seenDTO);
                 }
 
-                // Scoring
-                log.info("Scoring Listings");
-                List<ListingDTO> shortlistedDTOs = scorer.score(tempDTOsWithJDs);
-                totalDTOs.addAll(shortlistedDTOs);
+                if (publishTopResults) {
+                    // Scoring
+                    log.info("Scoring Listings");
+                    List<ListingDTO> shortlistedDTOs = scorer.score(tempDTOsWithJDs);
+                    totalDTOs.addAll(shortlistedDTOs);
+                } else {
+                    log.info("PUBLISH_TOP_RESULTS off: skipping scoring, {} new listings written for downstream", tempDTOsWithJDs.size());
+                    totalDTOs.addAll(tempDTOsWithJDs);
+                }
             }
 
             catch (IOException exception) {

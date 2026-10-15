@@ -28,6 +28,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,15 @@ public class GovScraper implements Scraper {
     private List<String> employmentTerm;
     @Value("${CAREER_GOV_SORT_BY:relevance}")
     private String sortCriteria;
+    // When true, return every currently open posting: no keyword search and no experience filter here.
+    // The settings above (SEARCH_TERM, YEARS_OF_EXPERIENCE...) are left in place and simply unused in this mode.
+    // Default false keeps the original behaviour.
+    @Value("${FULL_LISTINGS_MODE:false}")
+    private boolean fullListingsMode;
+    // Stop fetching job descriptions after this many seconds so the Lambda can still write results before its timeout.
+    // Listings not fetched are not marked as seen, so the next run picks them up.
+    @Value("${JD_FETCH_BUDGET_SECONDS:480}")
+    private long jdFetchBudgetSeconds;
 
     private String ALGOLIA_APP_ID = "3OW7D8B4IZ";
     private String ALGOLIA_API_KEY = "32fa71d8b0bc06be1e6395bf8c430107";
@@ -66,16 +76,26 @@ public class GovScraper implements Scraper {
     public List<ListingDTO> search() throws IOException, InterruptedException {
         log.info("Entering Career Gov Scrapper");
 
-        List<AlgoliaSearchResponseJobPost> hits = fetchAlgoliaHits();
-        log.info("*******************************************");
-        log.info("Algolia returned {} ranked hits for '{}'", hits.size(), getPlainSearchTerm());
+        List<GovSearchResponseJobPost> listingsFilteredBySearchTerm;
+        if (fullListingsMode) {
+            log.info("FULL_LISTINGS_MODE on: skipping the keyword search and the experience filter");
+            List<GovSearchResponseJobPost> jobsCatalog = fetchFullCatalogById();
+            log.info("Full catalog fetch returned {} postings", jobsCatalog.size());
+            listingsFilteredBySearchTerm = jobsCatalog.stream()
+                    .filter(job -> job.isAvailable() == true)
+                    .collect(Collectors.toList());
+        } else {
+            List<AlgoliaSearchResponseJobPost> hits = fetchAlgoliaHits();
+            log.info("*******************************************");
+            log.info("Algolia returned {} ranked hits for '{}'", hits.size(), getPlainSearchTerm());
 
-        List<GovSearchResponseJobPost> jobsCatalog = fetchFullCatalogById();
-        log.info("*******************************************");
+            List<GovSearchResponseJobPost> jobsCatalog = fetchFullCatalogById();
+            log.info("*******************************************");
 //        log.info("Full catalog fetch catalog : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jobsCatalog));
-        log.info("Full catalog fetch returned {} postings", jobsCatalog.size());
+            log.info("Full catalog fetch returned {} postings", jobsCatalog.size());
 
-        List<GovSearchResponseJobPost> listingsFilteredBySearchTerm = mergeHitsWithCatalog(hits, jobsCatalog);
+            listingsFilteredBySearchTerm = mergeHitsWithCatalog(hits, jobsCatalog);
+        }
         log.info("*******************************************");
 //        log.info("listingsFilteredBySearchTerm : {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsFilteredBySearchTerm));
         log.info("listingsFilteredBySearchTerm count: {}", listingsFilteredBySearchTerm.size());
@@ -85,7 +105,7 @@ public class GovScraper implements Scraper {
 //        log.info("listingsWithoutJD : {}",objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listingsWithoutJD));
         log.info("listingsWithoutJD count: {}", listingsWithoutJD.size());
         
-        List<ListingDTO> filteredListingsWithoutJD = filterPostings(listingsWithoutJD);
+        List<ListingDTO> filteredListingsWithoutJD = fullListingsMode ? listingsWithoutJD : filterPostings(listingsWithoutJD);
         log.info("filteredListingsWithoutJD count: {}", filteredListingsWithoutJD.size());
 
 //        List<ListingDTO> finalPostings = populateJobDescription(filteredListingsWithoutJD);
@@ -212,16 +232,38 @@ public class GovScraper implements Scraper {
         return objectMapper.writeValueAsString(payload);
     }
 
+    @FunctionalInterface
+    interface JdFetcher {
+        String fetch(String url) throws IOException, InterruptedException;
+    }
+
     // API calls are intentionally made blocking in order to not overwhelm server
     public List<ListingDTO> populateJobDescription(List<ListingDTO> jobCatalogue) throws IOException, InterruptedException {
-        log.info("Populating Job Descriptions...");
+        return populateJobDescription(jobCatalogue, this::returnJobDescription, jdFetchBudgetSeconds);
+    }
+
+    // Only listings whose description was fetched are returned. A listing is skipped (and therefore NOT marked as seen,
+    // so it is retried next run) when its fetch fails or the time budget has run out.
+    List<ListingDTO> populateJobDescription(List<ListingDTO> jobCatalogue, JdFetcher fetcher, long budgetSeconds) throws InterruptedException {
+        log.info("Populating Job Descriptions for {} listings (budget {} s)...", jobCatalogue.size(), budgetSeconds);
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(budgetSeconds);
         List<ListingDTO> jobsWithJDs = new ArrayList<>();
+        int failed = 0;
         for (ListingDTO job : jobCatalogue) {
-            String jd = returnJobDescription(job.url());
-            ListingDTO jobWithJD = job.toBuilder()
-                    .jobDescription(jd)
-                    .build();
-            jobsWithJDs.add(jobWithJD);
+            if (System.nanoTime() > deadline) {
+                log.warn("JD fetch budget used up: {} fetched, {} failed, {} left for the next run",
+                        jobsWithJDs.size(), failed, jobCatalogue.size() - jobsWithJDs.size() - failed);
+                break;
+            }
+            String jd;
+            try {
+                jd = fetcher.fetch(job.url());
+            } catch (IOException exception) {
+                failed++;
+                log.warn("Could not fetch JD for listing {}: {}", job.id(), exception.getMessage());
+                continue;
+            }
+            jobsWithJDs.add(job.toBuilder().jobDescription(jd).build());
         }
         return jobsWithJDs;
     }
@@ -235,6 +277,10 @@ public class GovScraper implements Scraper {
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        // A blocked or rate-limited page (403/429/5xx) must not be stored as an empty description.
+        if (response.statusCode() != 200) {
+            throw new IOException("HTTP " + response.statusCode() + " for " + url);
+        }
 //        log.info("Reading response statusCode: {}", response.statusCode());
 //        log.info("Reading response body: {}", response.body());
 //        Document document = Jsoup.parse(response.body());

@@ -58,13 +58,24 @@ public class SyncService {
         return freshDataSet.stream().toList();
     }
 
+    // write this run's new listings (full, with JDs) for downstream consumers. Call BEFORE syncData: if this throws,
+    // the listings are not yet marked as seen and will be picked up again next run.
+    public void writeRun(List<ListingDTO> newListings) {
+        s3ClientService.putRun(newListings);
+    }
+
     // use deduped results and add to the back to s3
     public void syncData(List<ListingDTO> dedupedData, List<ListingDTO> retrievedDataFromS3){
         List<ListingDTO> combinedData = new ArrayList<>(retrievedDataFromS3);
         combinedData.addAll(dedupedData);
         List<ListingDTO> newerData = combinedData.stream()
                 .filter(data -> {
-                    long closingTimeStamp = Long.parseLong(data.closingTimestamp());
+                    long closingTimeStamp;
+                    try {
+                        closingTimeStamp = Long.parseLong(data.closingTimestamp());
+                    } catch (NumberFormatException exception) {
+                        return true; // missing or unreadable closing time: keep rather than crash the whole sync
+                    }
 //                    long openingTimeStamp = Long.parseLong(data.openingTimestamp());
                     long currentTimeStamp = System.currentTimeMillis();
 //                    long pastTimeStamp = Instant.now().minus(DAYS_FILTER, ChronoUnit.DAYS).toEpochMilli();

@@ -5,7 +5,9 @@ import com.chngy.jobscraper.DependencyFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.*;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
@@ -33,6 +35,10 @@ public class Config {
                 gen.writeFieldName("null");
             }
         });
+
+        SimpleModule pairModule = new SimpleModule();
+        pairModule.addDeserializer(Pair.class, new PairDeserializer());
+        objectMapper.registerModule(pairModule);
 
         return objectMapper;
     }
