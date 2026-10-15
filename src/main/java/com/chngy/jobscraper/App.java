@@ -54,7 +54,7 @@ public class App implements RequestHandler<Map<String, String>, String> {
         List<ListingDTO> results = orchestrator.runJobs();
         log.info("End of scraping");
 
-        if(!isDev) {
+        if(!isDev && orchestrator.isPublishTopResults()) {
 //      This sends it to the SNS topic
             PublishRequest publishRequest = PublishRequest.builder()
                     .topicArn(TOPIC_NAME)

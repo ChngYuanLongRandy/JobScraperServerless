@@ -8,8 +8,8 @@ Resources:
     Properties:
       Runtime: java25
       Handler: com.chngy.jobscraper.App::handleRequest
-      Timeout: 600
-      MemorySize: 512
+      Timeout: 900
+      MemorySize: 1024
       CodeUri: .
       Environment:
         Variables:
@@ -29,6 +29,12 @@ Resources:
           NUMBER_OF_RESULTS: 5
           FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
+          # Full-listings mode for The Sausage (downstream filtering). Settings above stay in place but are unused while it is on.
+          # To restore the old behaviour set FULL_LISTINGS_MODE and PUBLISH_TOP_RESULTS back to "false" / "true".
+          FULL_LISTINGS_MODE: "true"
+          PUBLISH_TOP_RESULTS: "false"
+          JD_FETCH_BUDGET_SECONDS: 720
+          S3_RUN_PREFIX: data/runs/
           POSITIVE_SCORER_ITEMS: java, javascript, typescript, react, spring
           NEGATIVE_SCORER_ITEMS: react native, python, lead, leadership, architect, architecture, rust, .net, asp, senior, mentor, php
       Tags:

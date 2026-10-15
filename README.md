@@ -57,3 +57,12 @@ But based on personal experience it is not the case for mcf
 
 Complete the GovScraper
 - Filtering for experience and employment term not done for the merging
+
+## Full-listings mode (for The Sausage)
+Set via environment variables (see `template.yaml`); the original settings stay in place and are simply unused while it is on.
+- `FULL_LISTINGS_MODE=true`: skip the keyword search and the experience filter; return every open posting.
+- `PUBLISH_TOP_RESULTS=false`: skip scoring and the SNS email. Set `FULL_LISTINGS_MODE=false` and `PUBLISH_TOP_RESULTS=true` to restore the old behaviour.
+- Each run writes its new (deduped, with job descriptions) listings to `S3_RUN_PREFIX` (default `data/runs/`) as one JSON file, BEFORE they are marked as seen.
+- `JD_FETCH_BUDGET_SECONDS`: stop fetching descriptions after this long. Listings not fetched, or whose fetch failed, are not marked as seen and are retried next run. The first run over a large catalog may need several manual invocations to catch up.
+- Fixed: the seen file could be written but not read back (`Pair` fields), so dedupe saw nothing as seen. A read failure now fails the run instead of silently resetting the seen list.
+- Fixed: `ListingDTO` lacked `score`/`hits`/`Comparable`, so the committed code did not compile.
