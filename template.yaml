@@ -29,9 +29,11 @@ Resources:
           NUMBER_OF_RESULTS: 5
           FILTER_OUT_RESULTS_DAYS_AGO: 14
           LOG4J_CONFIGURATION_FILE: log4j2-prod.xml
-          # Full-listings mode for The Sausage (downstream filtering). Settings above stay in place but are unused while it is on.
-          # To restore the old behaviour set FULL_LISTINGS_MODE and PUBLISH_TOP_RESULTS back to "false" / "true".
-          FULL_LISTINGS_MODE: "true"
+          # The Sausage mode: keyword search (SEARCH_TERM) and the experience filter run here; no scoring, no SNS email.
+          # Each run still writes its new listings to S3_RUN_PREFIX for downstream review.
+          # FULL_LISTINGS_MODE "true" returns every open posting instead (used for the 2026-10-18 full sample).
+          # To restore the old email behaviour also set PUBLISH_TOP_RESULTS back to "true".
+          FULL_LISTINGS_MODE: "false"
           PUBLISH_TOP_RESULTS: "false"
           JD_FETCH_BUDGET_SECONDS: 720
           S3_RUN_PREFIX: data/runs/
@@ -48,7 +50,7 @@ Resources:
         WeeklyTrigger:
           Type: Schedule
           Properties:
-            Schedule: rate(7 days)
+            Schedule: cron(0 7 ? * SUN *)  # Sunday 07:00 UTC = 15:00 Singapore, so the results are ready for Monday
   AppFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
