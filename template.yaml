@@ -50,7 +50,7 @@ Resources:
         WeeklyTrigger:
           Type: Schedule
           Properties:
-            Schedule: cron(0 7 ? * SUN *)  # Sunday 07:00 UTC = 15:00 Singapore, so the results are ready for Monday
+            Schedule: cron(0 22 ? * SAT *)  # Saturday 22:00 UTC = Sunday 06:00 Singapore
   AppFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
